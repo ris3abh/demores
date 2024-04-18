@@ -1,0 +1,69 @@
+[
+    {
+        "header": "education",
+        "content": [
+            "drexel university, college of computing and informatics            philadelphia, pa",
+            "master of science in data science                                   gpa: 3.83",
+            "",
+            "rajiv gandhi proudhyogik vishwavidyalaya                                       bhopal, india",
+            "bachelor of technology in computer science and engineering                               gpa: 3.63",
+            "",
+            "skills",
+            "programming languages & tools: python (numpy, pandas, plotly, tensorflow, pytorch, xgboost), r, sql, sas, excel",
+            "data analytics & visualization: google analytics, power bi, tableau, crm analytics, looker",
+            "big data & cloud technologies: spark, aws (s3, emr, sagemaker), azure, snowflake",
+            "data management & integration: data extraction, manipulation, architecture, and warehousing techniques",
+            "machine learning & deep learning: predictive modeling, statistical analysis, regression, clustering, forecasting, nlp, vertex ai",
+            "software engineering & project management: docker, kubernetes, jenkins, tekton, typescript, react (mern stack), api development, agile.",
+            ""
+        ]
+    },
+    {
+        "header": "certifications",
+        "content": [
+            "•      aws certified data engineering associate (dea-c01)",
+            ""
+        ]
+    },
+    {
+        "header": "professional experience",
+        "content": [
+            "dark matter technologies                                                                                                                        jacksonville, florida",
+            "data engineer                            jul 2023 – de 2023",
+            "collaborated with cross-functional teams including product owners, product managers, and end users to understand their business processes and needs, resulting in the development of customized ml models that improved customer facing retail search by 30%.",
+            "utilized python and sql for building predictive models, achieving a 15% reduction in customer churn rate through tageted retention strategies based on data insights",
+            "analyzed and processed large data sets using sql and nosql databases to drive innovative solutions for retail search, leading to a 40% increase in user engagement",
+            "orchestrated the development of efficient etl pipelines for aiva vision technology, achieving a 14% cost reduction and a 23% increase in data processing efficiency",
+            "",
+            "digital pass                           indore, india",
+            "data scientist                                  jun 2021- jun 2022",
+            "implemented efficient ml training workflows and learning pipelines via vertex ai, resulting in a 25% improvement in genai results accuracy",
+            "developed and implemented machine learning applications, including nlp and llms, in a corporate environment using python and ml libraries like pytorch and tensorflow, resulting in a 20% increase in operational efficiency",
+            "designed and built monitoring dashboards and alerts using splunk and dynatrace to track system performance, reducing downtime by 15% across all cloud-enabled solutions",
+            "enhanced team communication by employing task management software, optimizing the tracking and coordination within the data engineering team for pivotal projects",
+            "",
+            "sk enterprises                           bhopal, india",
+            "data scientist                               nov 2020 - jun 2021",
+            "implemented advanced time series forecasting and lstm models for inventory management, resulting in a 25% reduction in overstock levels and a $500k cost savings",
+            "utilized predictive analytics to optimize supply chain logistics, leading to a 20% decrease in delivery times and $300k in cost savings; showcased expertise in data-driven decision-making and operational efficiency within the retail industry",
+            "executed critical enhancements for data processing, enhancing efficiency by 30% and reducing errors by 35%, demonstrating a strong commitment to accuracy and effectiveness",
+            ""
+        ]
+    },
+    {
+        "header": "academic projects (github)",
+        "content": [
+            "advertisement creator",
+            "achieved a remarkable 97% accuracy rate in the generation of advertisements that resonated with target audiences, significantly reducing creative development time and tailoring content to user behavior and preferences",
+            "seamlessly integrated the generative ai models with existing content management systems for on-the-fly ad creation fine-tuned for b2b sales and marketing",
+            "",
+            "mathematical equation solver using neural machine translation",
+            "formulated a mathematical equation solver leveraging hugging face transformers and bi-lstm models, translating complex equations into solutions with an 80% accuracy rate by enriching the dataset to over 400,000 equations",
+            "utilized nlp techniques for innovative mathematical language processing, significantly enhancing the model's ability to interpret and solve intricate mathematical equations, resulting in a validation accuracy boost of 80%",
+            "",
+            "sentencing prediction using docket data for court cases",
+            "led the development of a sentencing prediction model employing ml/dl techniques on philadelphia court case data, achieving critical insights with an 81% accuracy rate in multiclass sentencing predictions",
+            ""
+        ]
+    }
+]
