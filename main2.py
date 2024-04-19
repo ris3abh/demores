@@ -1,23 +1,21 @@
-import json
 import os
-from typing import List
-
-import networkx as nx
+import json
+import docx
 import nltk
 import pandas as pd
+from typing import List
+import streamlit as st
+from pypdf import PdfReader
 import plotly.express as px
 import plotly.graph_objects as go
-import streamlit as st
-from annotated_text import annotated_text, parameters
-from streamlit_extras import add_vertical_space as avs
-from streamlit_extras.badges import badge
-
+from annotated_text import parameters
+from streamlit_extras import add_vertical_space
 from scripts.similarity.get_score import *
 from scripts.utils import get_filenames_from_dir
 from scripts.utils.logger import init_logging_config
 from scripts.similarity.get_score import get_score
-from scripts.parsers import ParseJobDesc, ParseResume
 from scripts.ReadPdf import read_single_pdf
+from scripts.parsers import ParseJobDesc, ParseResume
 
 init_logging_config()
 cwd = find_path("Resume-Matcher")
@@ -32,100 +30,6 @@ except LookupError:
 parameters.SHOW_LABEL_SEPARATOR = False
 parameters.BORDER_RADIUS = 3
 parameters.PADDING = "0.5 0.25rem"
-
-# Function to load the data provided by user
-
-
-# Function create star graph
-def create_star_graph(nodes_and_weights, title):
-    # Create an empty graph
-    G = nx.Graph()
-
-    # Add the central node
-    central_node = "resume"
-    G.add_node(central_node)
-
-    # Add nodes and edges with weights to the graph
-    for node, weight in nodes_and_weights:
-        G.add_node(node)
-        G.add_edge(central_node, node, weight=weight * 100)
-
-    # Get position layout for nodes
-    pos = nx.spring_layout(G)
-
-    # Create edge trace
-    edge_x = []
-    edge_y = []
-    for edge in G.edges():
-        x0, y0 = pos[edge[0]]
-        x1, y1 = pos[edge[1]]
-        edge_x.extend([x0, x1, None])
-        edge_y.extend([y0, y1, None])
-
-    edge_trace = go.Scatter(
-        x=edge_x,
-        y=edge_y,
-        line=dict(width=0.5, color="#888"),
-        hoverinfo="none",
-        mode="lines",
-    )
-
-    # Create node trace
-    node_x = []
-    node_y = []
-    for node in G.nodes():
-        x, y = pos[node]
-        node_x.append(x)
-        node_y.append(y)
-
-    node_trace = go.Scatter(
-        x=node_x,
-        y=node_y,
-        mode="markers",
-        hoverinfo="text",
-        marker=dict(
-            showscale=True,
-            colorscale="Rainbow",
-            reversescale=True,
-            color=[],
-            size=10,
-            colorbar=dict(
-                thickness=15,
-                title="Node Connections",
-                xanchor="left",
-                titleside="right",
-            ),
-            line_width=2,
-        ),
-    )
-
-    # Color node points by number of connections
-    node_adjacencies = []
-    node_text = []
-    for node in G.nodes():
-        adjacencies = list(G.adj[node])  # changes here
-        node_adjacencies.append(len(adjacencies))
-        node_text.append(f"{node}<br># of connections: {len(adjacencies)}")
-
-    node_trace.marker.color = node_adjacencies
-    node_trace.text = node_text
-
-    # Create the figure
-    fig = go.Figure(
-        data=[edge_trace, node_trace],
-        layout=go.Layout(
-            title=title,
-            titlefont_size=16,
-            showlegend=False,
-            hovermode="closest",
-            margin=dict(b=20, l=5, r=5, t=40),
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        ),
-    )
-
-    # Show the figure
-    st.plotly_chart(fig)
 
 def create_annotated_text(
     input_string: str, word_list: List[str], annotation: str, color_code: str):
@@ -159,36 +63,104 @@ def tokenize_string(input_string):
     tokens = nltk.word_tokenize(input_string)
     return tokens
 
-st.title(":blue[Resume Matcher]")
-# Sidebar for user input
-st.sidebar.title("Upload your files")
-uploaded_resume = st.sidebar.file_uploader("Upload a Resume", type=['pdf', 'docx', 'txt'])
-uploaded_job_desc = st.sidebar.file_uploader("Upload a Job Description", type=['pdf', 'docx', 'txt'])
+# Function to read text from various document formats
+def read_document(file_path):
+    # Extract the file extension
+    file_extension = os.path.splitext(file_path)[1].lower()
+    
+    try:
+        if file_extension == '.pdf':
+            return read_pdf(file_path)
+        elif file_extension == '.docx':
+            return read_docx(file_path)
+        elif file_extension == '.txt':
+            return read_txt(file_path)
+        else:
+            raise ValueError("Unsupported file type. Please upload a .pdf, .docx, or .txt file.")
+    except Exception as e:
+        st.error(f"Failed to read file: {str(e)}")
+        return None
 
-# Saving the uploaded files
-if uploaded_resume:
-    with open("data/Resumes/" + uploaded_resume.name, "wb") as f:
-        f.write(uploaded_resume.getbuffer())
-    output = uploaded_resume.name
-    st.success("Resume uploaded successfully.")
-if uploaded_job_desc:
-    with open("data/JobDescription/" + uploaded_job_desc.name, "wb") as f:
-        f.write(uploaded_job_desc.getbuffer())
-    output1 = uploaded_job_desc.name
-    st.success("Job Description uploaded successfully.")
+# Read PDF using PdfReader
+def read_pdf(file_path):
+    text_output = []
+    try:
+        with open(file_path, "rb") as file:
+            pdf_reader = PdfReader(file)
+            for page in pdf_reader.pages:
+                text = page.extract_text()
+                if text:
+                    text_output.append(text)
+    except Exception as e:
+        raise ValueError(f"PDF read error: {str(e)}")
+    return " ".join(text_output)
 
-st.divider()
-avs.add_vertical_space(1)
+# Read DOCX using python-docx
+def read_docx(file_path):
+    text_output = []
+    try:
+        doc = docx.Document(file_path)
+        for para in doc.paragraphs:
+            if para.text:
+                text_output.append(para.text)
+    except Exception as e:
+        raise ValueError(f"DOCX read error: {str(e)}")
+    return " ".join(text_output)
 
-# converting the uploaded files to strings
-resume_string = read_single_pdf(uploaded_resume.name)
-st.write(resume_string)
-job_desc_string = read_single_pdf(uploaded_job_desc.name)
-st.write(job_desc_string)
+# Read TXT files
+def read_txt(file_path):
+    try:
+        with open(file_path, "r", encoding='utf-8') as file:
+            return file.read()
+    except Exception as e:
+        raise ValueError(f"TXT read error: {str(e)}")
 
-resumeParser = ParseResume(resume_string)
-output = resumeParser.get_JSON()
-st.write(output)
-jobParser = ParseJobDesc(job_desc_string)
-output1 = jobParser.get_JSON()
-st.write(output1)
+# Initialize Streamlit layout
+st.set_page_config(page_title="Resume Matcher", layout="wide")
+st.title("Resume Matcher")
+st.sidebar.header("Upload Your Files")
+
+# File uploaders
+uploaded_resume = st.sidebar.file_uploader("Upload a Resume", type=['pdf', 'docx', 'txt'], key="resume_uploader")
+uploaded_job_desc = st.sidebar.file_uploader("Upload a Job Description", type=['pdf', 'docx', 'txt'], key="jobdesc_uploader")
+
+# Process Files Button
+if st.sidebar.button("Save and Process Files"):
+    if uploaded_resume is not None and uploaded_job_desc is not None:
+        # Save files
+        resume_path = os.path.join("data/Resumes", uploaded_resume.name)
+        job_desc_path = os.path.join("data/JobDescription", uploaded_job_desc.name)
+        
+        with open(resume_path, "wb") as f:
+            f.write(uploaded_resume.getbuffer())
+        with open(job_desc_path, "wb") as f:
+            f.write(uploaded_job_desc.getbuffer())
+
+        # Process Files
+        resume_text = read_document(resume_path)
+        job_desc_text = read_document(job_desc_path)
+        
+        # Parsing the text using custom parser scripts
+        resume_data = ParseResume(resume_text).get_JSON()
+        job_desc_data = ParseJobDesc(job_desc_text).get_JSON()
+
+        resume_string = " ".join(resume_data["extracted_keywords"])
+        jd_string = " ".join(job_desc_data["extracted_keywords"])
+        result = get_score(resume_string, jd_string)
+        similarity_score = round(result[0].score * 100, 2)
+        score_color = "green"
+        if similarity_score < 60:
+            score_color = "red"
+        elif 60 <= similarity_score < 75:
+            score_color = "orange"
+        st.markdown(
+            f"Similarity Score obtained for the resume and job description is "
+            f'<span style="color:{score_color};font-size:24px; font-weight:Bold">{similarity_score}</span>',
+            unsafe_allow_html=True,
+)        
+    else:
+        st.warning("Please upload both a resume and a job description.")
+
+# Additional Streamlit elements
+st.markdown("## Visualizations and Further Analysis")
+st.markdown("Here you could add further analysis and visualizations related to the uploaded and processed data.")
