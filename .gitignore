@@ -1,3 +1,9 @@
+# Files
+*.csv
+*.log
+*.txt
+*.docx
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

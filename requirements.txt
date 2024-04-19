@@ -4,3 +4,5 @@ nltk
 python-Levenshtein
 streamlit
 pandas
+spacy
+pymupdf
