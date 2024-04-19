@@ -1,7 +1,9 @@
 import docx
-from fuzzywuzzy import process
-from nltk.tokenize import word_tokenize
 import fitz  # PyMuPDF
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import re
+from fuzzywuzzy import process
 
 class ResumeProcessor:
     SIMILARITY_THRESHOLD = 80
@@ -15,10 +17,13 @@ class ResumeProcessor:
 
     def __init__(self, file_path):
         self.file_path = file_path
-        if file_path.endswith('.docx'):
-            self.full_text = self.extract_text_from_docx()
-        elif file_path.endswith('.pdf'):
-            self.full_text = self.extract_text_from_pdf()
+        self.full_text = self.extract_text()
+
+    def extract_text(self):
+        if self.file_path.endswith('.docx'):
+            return self.extract_text_from_docx()
+        elif self.file_path.endswith('.pdf'):
+            return self.extract_text_from_pdf()
         else:
             raise ValueError("Unsupported file type. Please upload a .docx or .pdf file.")
 
@@ -32,6 +37,13 @@ class ResumeProcessor:
         for page in doc:
             text += page.get_text()
         return text.lower()
+
+    def process_text(self):
+        """Consolidates the text of the resume after removing stopwords and non-alphabetic characters."""
+        words = word_tokenize(self.full_text)
+        filtered_words = [word for word in words if word.isalpha() and word not in stopwords.words('english')]
+        clean_text = ' '.join(filtered_words)
+        return clean_text
 
     def is_section_header(self, line):
         line_clean = ' '.join(word for word in word_tokenize(line) if len(word) > 1).lower()
@@ -48,10 +60,13 @@ class ResumeProcessor:
         for line in full_text.split('\n'):
             line = line.strip()
             if line in headers:
+                if current_section:
+                    sections.append(current_section)
                 current_section = {"header": line, "content": []}
-                sections.append(current_section)
             elif current_section:
                 current_section["content"].append(line)
+        if current_section:
+            sections.append(current_section)
         return sections
 
     def process_resume(self):
@@ -73,4 +88,3 @@ class ResumeProcessor:
             elif current_title:
                 structured_content[current_title].append(line)
         return structured_content
-
