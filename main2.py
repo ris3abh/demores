@@ -4,10 +4,9 @@ import docx
 import uuid
 import nltk
 import pandas as pd
-from typing import List
 import streamlit as st
+from typing import List
 from pypdf import PdfReader
-import plotly.express as px
 import plotly.graph_objects as go
 from annotated_text import parameters
 from streamlit_extras import add_vertical_space
@@ -69,13 +68,13 @@ def read_docx(file_path):
     return " ".join(text_output)
 
 # Streamlit page configuration
-st.set_page_config(page_title="Resume Matcher", layout="wide")
-st.title("Resume Matcher")
+st.set_page_config(page_title="Resume Scorer", layout="wide")
+st.title("Resume Scorer")
 st.sidebar.header("Upload Your Resume")
 
 # File uploaders
 uploaded_resume = st.sidebar.file_uploader("Upload a Resume", type=['pdf', 'docx'], key="resume_uploader")
-job_description_text = st.sidebar.text_area("Enter your job description here:")
+job_description_text = st.sidebar.text_area("Enter your job description here:", key="job_desc_text", height=200)
 
 # Processing the uploads and text input
 if st.sidebar.button("Process"):
@@ -106,6 +105,7 @@ if st.sidebar.button("Process"):
         similarity_score = round(result[0].score * 100, 2)
         # saving the cleaned files for the further analysis
         # write code here
+        st.success("Processing complete!")
 
         # Display results
         score_color = "green" if similarity_score >= 75 else "orange" if similarity_score >= 60 else "red"
