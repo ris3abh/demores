@@ -2,7 +2,7 @@ from resume_processor import ResumeProcessor
 from resume_intiution import ResumeDataProcessor
 
 def main():
-    doc_path = '../data/1.docx'
+    doc_path = '../data/2.docx'
     output_csv_path = '../data/output.csv'
     
     # Initialize the processor with the doc path and process the resume
