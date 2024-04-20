@@ -3,6 +3,8 @@
 *.log
 *.txt
 *.docx
+*.doc
+*.pdf
 
 # Jupyter Notebook
 .ipynb_checkpoints
