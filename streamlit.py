@@ -12,7 +12,7 @@ from annotated_text import parameters
 from streamlit_extras import add_vertical_space as avs
 from scripts.similarity.get_score import get_score
 from scripts.parsers import ParseJobDesc, ParseResume
-from scripts.powerExtract import ResumeJobMatchingSystem
+from scripts.powerExtract import ResumeJobMatchingSystem, analyze_job_fit_hard_skills, analyze_job_fit_soft_skills
 
 # Initialize logging and configuration
 from scripts.utils.logger import init_logging_config
@@ -102,41 +102,44 @@ if st.sidebar.button("Process"):
         resume_text = read_document(resume_path, uploaded_resume.type.split('/')[-1])
         resume_data = ParseResume(resume_text).get_JSON()
         job_desc_data = ParseJobDesc(job_description_text).get_JSON()
-
-        DescRes = ResumeJobMatchingSystem("data/job_skills.json", "data/job_skills.csv")
-        if DescRes.df is not None:
-            job_title = job_title.lower()
-            resume_text = resume_text.lower()
-            stop_words = set(nltk.corpus.stopwords.words('english'))
-            job_description_text = job_description_text.lower()
-            resume_keywords = DescRes.extract_keywords(resume_text)
-            job_keywords = DescRes.extract_keywords(job_description_text)
-            # lets get some nlp visualization here
-            st.write("DISCLAIMER: Chill these are not the correct ones, we will get the optimized ones soon.")
-            st.warning("Job Title Matches: Started")
-            matches = DescRes.find_job_title_matches(job_title)
-            print("Job title matches found:", matches)
-            st.success("Job Title Matches: Done")
-            resume_optimized_keywords = DescRes.optimize_keywords(matches, resume_keywords)
-            job_optimized_keywords = DescRes.optimize_keywords(matches, job_keywords)
-            resume_advanced_key_words = DescRes.process_keywords(resume_optimized_keywords, matches)
-            job_advanced_key_words = DescRes.process_keywords(job_optimized_keywords, matches)
-            st.write("Advanced Key Words (Resume):", resume_advanced_key_words)
-            st.write("Advanced Key Words (Job Description):", job_advanced_key_words)
-        else:
-            st.error("Failed to load job skills data.")
+        if resume_text and job_description_text:
+            st.success("resume and job successfully read.")
+        json_file_path = 'data/job_skills.json'
+        csv_file_path = 'data/job_skills.csv'
+        ss_json_file_path = 'data/soft_skills.json'
+        matching_system = ResumeJobMatchingSystem(json_file_path, csv_file_path, ss_json_file_path)
+        if matching_system.df is not None and matching_system.soft_skills_df is not None:
+            resume_keywords, job_keywords = analyze_job_fit_hard_skills(matching_system, job_title, resume_text, job_description_text) # matching_system, job_title, resume_text, job_text
+            resume_soft_keywords, job_soft_keywords = analyze_job_fit_soft_skills(matching_system, resume_text, job_description_text) # matching_system, resume_text, job_text
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Resume Keywords")
+            st.write(resume_keywords)
+            st.markdown("### Job Description Keywords")
+            st.write(job_keywords)
+        with col2:
+            st.markdown("### Resume Soft Skills")
+            st.write(resume_soft_keywords)
+            st.markdown("### Job Description Soft Skills")
+            st.write(job_soft_keywords)
 
         # Similarity scoring
-        resume_advanced_key_words = " ".join(resume_advanced_key_words)
-        job_advanced_key_words = " ".join(job_advanced_key_words)
+        resume_advanced_key_words = " ".join(resume_keywords)
+        job_advanced_key_words = " ".join(job_keywords)
+        resume_advanced_soft_key_words = " ".join(resume_soft_keywords)
+        job_advanced_soft_key_words = " ".join(job_soft_keywords)
         st.warning("Calculating similarity score...")
-        result = get_score(resume_advanced_key_words, job_advanced_key_words)
-        similarity_score = round(result[0].score * 100, 2)
+        result1 = get_score(resume_advanced_key_words, job_advanced_key_words)
+        similarity_score = round(result1[0].score * 100, 2)
+        result2 = get_score(resume_advanced_soft_key_words, job_advanced_soft_key_words)
+        similarity_score_soft = round(result2[0].score * 100, 2)
         st.success("Processing complete!")
 
         # Display results
         score_color = "green" if similarity_score >= 75 else "orange" if similarity_score >= 60 else "red"
         st.markdown(f"**Similarity Score**: <span style='color: {score_color};'>{similarity_score}%</span>", unsafe_allow_html=True)
+        score_color = "green" if similarity_score_soft >= 75 else "orange" if similarity_score_soft >= 60 else "red"
+        st.markdown(f"**Similarity Score (Soft Skills)**: <span style='color: {score_color};'>{similarity_score_soft}%</span>", unsafe_allow_html=True)
     else:
         st.warning("Please provide all required fields: a resume, a job description, the company name, and the job title.")
 
